@@ -39,7 +39,9 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
 
     let hls: Hls | null = null;
 
-    if (Hls.isSupported() && url.includes('.m3u8')) {
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    if (Hls.isSupported() && (url.includes('.m3u8') || !isSafari)) {
       hls = new Hls({
         maxBufferLength: 30,
         enableWorker: true,
@@ -73,7 +75,7 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
         video.play().catch((e) => console.log('Autoplay prevented:', e));
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // For Safari or browsers with native HLS support
+      // Native fallback ONLY for Safari
       const bypassUrl = `${window.location.origin}/proxy/${url}`;
       video.src = bypassUrl;
       video.addEventListener('loadedmetadata', () => {
@@ -83,7 +85,6 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
          console.error('Network Error (Native HLS fallback): Erro a abrir o canal nativamente.');
       });
     } else {
-      // Fallback for direct mp4 or other supported types
       video.src = url;
     }
 
