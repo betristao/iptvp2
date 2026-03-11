@@ -148,25 +148,7 @@ function App() {
         <div className="player-section">
           <Player url={activeChannel?.url || ''} poster={activeChannel?.logo} />
           
-          {activeChannel && (
-            <div className="now-playing-info">
-              {activeChannel.logo && (
-                <div className="now-playing-logo">
-                  <img 
-                    src={activeChannel.logo} 
-                    alt={activeChannel.name} 
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).parentElement!.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-              <div className="now-playing-text">
-                <h2>{activeChannel.name}</h2>
-                <p className="badge">{activeChannel.group || 'TV'}</p>
-              </div>
-            </div>
-          )}
+
         </div>
       </main>
     </div>
