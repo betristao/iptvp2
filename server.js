@@ -23,11 +23,31 @@ app.use('/proxy/', createProxyMiddleware({
     changeOrigin: true,
     logger: console,
     on: {
-      proxyReq: (proxyReq) => {
-          // Fake headers so RTP/SIC don't block the request
-          proxyReq.setHeader('Origin', 'https://www.rtp.pt');
-          proxyReq.setHeader('Referer', 'https://www.rtp.pt/play/direto/rtp1');
-          proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+      proxyReq: (proxyReq, req) => {
+          const targetUrl = req.originalUrl.replace('/proxy/', '');
+          try {
+              const urlObj = new URL(targetUrl);
+              let origin = `https://${urlObj.hostname}`;
+              let referer = origin + '/';
+
+              if (targetUrl.includes('rtp.pt')) {
+                  origin = 'https://www.rtp.pt';
+                  referer = 'https://www.rtp.pt/';
+              } else if (targetUrl.includes('sicnot.live') || targetUrl.includes('sicnoticias')) {
+                  origin = 'https://sicnoticias.pt';
+                  referer = 'https://sicnoticias.pt/';
+              } else if (targetUrl.includes('sic.pt') || targetUrl.includes('impresa') || targetUrl.includes('cloudfront')) {
+                  origin = 'https://sic.pt';
+                  referer = 'https://sic.pt/';
+              } else if (targetUrl.includes('tvi') || targetUrl.includes('iol')) {
+                  origin = 'https://tvi.iol.pt';
+                  referer = 'https://tvi.iol.pt/';
+              }
+
+              proxyReq.setHeader('Origin', origin);
+              proxyReq.setHeader('Referer', referer);
+              proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0');
+          } catch(e) {}
       },
       proxyRes: (proxyRes) => {
           proxyRes.headers['Access-Control-Allow-Origin'] = '*';

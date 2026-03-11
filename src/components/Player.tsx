@@ -29,11 +29,8 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              // Network errors are mostly CORS or 403 Forbidden issues in IPTV
-              console.error('Network Error (Likely CORS):', data);
-              alert(
-                'Falha ao carregar o canal. Isto acontece frequentemente porque os provedores destes canais de IPTV (RTP, SIC, TVI) bloqueiam a reprodução no navegador (Erros CORS).\n\nPara assistir aos canais, instale e ative uma extensão "CORS Unblocker" no seu browser (como "Allow CORS: Access-Control-Allow-Origin" for Chrome).'
-              );
+              // Fails silently if CORS or network error blocks it
+              console.error('Network Error (CORS or HTTP code):', data);
               hls?.destroy();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
@@ -59,7 +56,7 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
         video.play().catch((e) => console.log('Autoplay prevented:', e));
       });
       video.addEventListener('error', () => {
-         alert('Erro a abrir o canal nativamente. Verifique as configurações de CORS ou use o Safari num Mac/iOS.');
+         console.error('Network Error (Native HLS fallback): Erro a abrir o canal nativamente.');
       });
     } else {
       // Fallback for direct mp4 or other supported types
