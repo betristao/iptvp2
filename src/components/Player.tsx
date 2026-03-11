@@ -6,10 +6,34 @@ interface PlayerProps {
   poster?: string;
 }
 
+const getYoutubeEmbedUrl = (url: string) => {
+  let videoId = '';
+  try {
+    if (url.includes('youtube.com/live/')) {
+      videoId = url.split('youtube.com/live/')[1].split('?')[0];
+    } else if (url.includes('youtube.com/watch')) {
+      const urlParams = new URL(url).searchParams;
+      videoId = urlParams.get('v') || '';
+    } else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1].split('?')[0];
+    }
+  } catch (e) {
+    console.error('Failed to parse YouTube URL', e);
+  }
+
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0`;
+  }
+  return null;
+};
+
 export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const youtubeEmbedUrl = url ? getYoutubeEmbedUrl(url) : null;
 
   useEffect(() => {
+    if (youtubeEmbedUrl) return; // Don't run HLS logic for YouTube videos
+    
     const video = videoRef.current;
     if (!video || !url) return;
 
@@ -68,7 +92,7 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
         hls.destroy();
       }
     };
-  }, [url]);
+  }, [url, youtubeEmbedUrl]);
 
   return (
     <div className="player-wrapper">
@@ -77,6 +101,15 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
           <h2>Selecione um canal</h2>
           <p>Escolha um canal da lista para começar a assistir</p>
         </div>
+      ) : youtubeEmbedUrl ? (
+        <iframe
+          src={youtubeEmbedUrl}
+          className="video-player"
+          allow="autoplay; encrypted-media; fullscreen"
+          allowFullScreen
+          title="YouTube Video Player"
+          style={{ width: '100%', height: '100%', border: 'none' }}
+        ></iframe>
       ) : (
         <video
           ref={videoRef}
