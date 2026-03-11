@@ -52,8 +52,9 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
         video.play().catch((e) => console.log('Autoplay prevented:', e));
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // For Safari (native HLS support)
-      video.src = url;
+      // For Safari or browsers with native HLS support
+      const bypassUrl = `${window.location.origin}/proxy/${url}`;
+      video.src = bypassUrl;
       video.addEventListener('loadedmetadata', () => {
         video.play().catch((e) => console.log('Autoplay prevented:', e));
       });

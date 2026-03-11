@@ -109,7 +109,12 @@ function App() {
               <button
                 key={`${channel.id}-${idx}`}
                 className={`channel-card ${activeChannel?.url === channel.url ? 'active' : ''}`}
-                onClick={() => setActiveChannel(channel)}
+                onClick={() => {
+                  setActiveChannel(channel);
+                  if (window.innerWidth <= 768) {
+                    setSidebarOpen(false);
+                  }
+                }}
               >
                 <div className="channel-logo">
                   {channel.logo ? (

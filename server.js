@@ -23,6 +23,12 @@ app.use('/proxy/', createProxyMiddleware({
     changeOrigin: true,
     logger: console,
     on: {
+      proxyReq: (proxyReq) => {
+          // Fake headers so RTP/SIC don't block the request
+          proxyReq.setHeader('Origin', 'https://www.rtp.pt');
+          proxyReq.setHeader('Referer', 'https://www.rtp.pt/play/direto/rtp1');
+          proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+      },
       proxyRes: (proxyRes) => {
           proxyRes.headers['Access-Control-Allow-Origin'] = '*';
           proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS, HEAD';
