@@ -30,7 +30,7 @@ app.use('/proxy/', createProxyMiddleware({
               let origin = `https://${urlObj.hostname}`;
               let referer = origin + '/';
 
-              // Specific Spoofing for Portuguese Channels
+              // Spoofing for Portuguese Channels (based on M3U recommendations)
               if (targetUrl.includes('rtp.pt')) {
                   origin = 'https://www.rtp.pt';
                   referer = 'https://www.rtp.pt/';
@@ -44,18 +44,19 @@ app.use('/proxy/', createProxyMiddleware({
 
               proxyReq.setHeader('Origin', origin);
               proxyReq.setHeader('Referer', referer);
-              proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+              // Use the specific Firefox UA recommended for these streams
+              proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0');
               
               proxyReq.removeHeader('X-Frame-Options');
           } catch(e) {}
       },
       proxyRes: (proxyRes) => {
+          // Clean CORS for maximum compatibility without credentials conflict
           proxyRes.headers['access-control-allow-origin'] = '*';
           proxyRes.headers['access-control-allow-methods'] = 'GET, OPTIONS, HEAD';
-          proxyRes.headers['access-control-allow-headers'] = '*';
-          proxyRes.headers['access-control-expose-headers'] = '*';
-          proxyRes.headers['access-control-allow-credentials'] = 'true';
+          proxyRes.headers['access-control-allow-headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Range';
           
+          delete proxyRes.headers['access-control-allow-credentials'];
           delete proxyRes.headers['content-security-policy'];
           delete proxyRes.headers['x-frame-options'];
           delete proxyRes.headers['x-content-type-options'];

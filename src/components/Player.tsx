@@ -39,7 +39,7 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
 
     let hls: Hls | null = null;
 
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android|vivaldi).)*safari/i.test(navigator.userAgent);
 
     if (Hls.isSupported() && (url.includes('.m3u8') || !isSafari)) {
       hls = new Hls({
