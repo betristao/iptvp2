@@ -11,8 +11,9 @@ const port = process.env.PORT || 8080;
 
 app.options(/\/proxy\/.*/, (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD, PUT, PATCH, POST, DELETE');
+    res.header('Access-Control-Allow-Headers', '*');
+    res.header('Access-Control-Expose-Headers', '*');
     res.sendStatus(204);
 });
 
@@ -41,12 +42,16 @@ app.use('/proxy/', createProxyMiddleware({
               if (targetUrl.includes('rtp.pt')) {
                   origin = 'https://www.rtp.pt';
                   referer = 'https://www.rtp.pt/';
-              } else if (targetUrl.includes('sicnot.live') || targetUrl.includes('sicnoticias') || targetUrl.includes('impresa.pt')) {
+              } else if (targetUrl.includes('sicnot.live') || targetUrl.includes('sicnoticias')) {
                   origin = 'https://sicnoticias.pt';
-                  referer = 'https://sicnoticias.pt/';
+                  // Adding the explicit '/direto' path that may be hardcoded in their firewall or previous successful config
+                  referer = 'https://sicnoticias.pt/direto';
               } else if (targetUrl.includes('tvi.iol.pt') || targetUrl.includes('iol.pt')) {
                   origin = 'https://tvi.iol.pt';
                   referer = 'https://tvi.iol.pt/';
+              } else if (targetUrl.includes('impresa.pt')) {
+                  origin = 'https://sic.pt';
+                  referer = 'https://sic.pt/';
               }
 
               proxyReq.setHeader('Origin', origin);
@@ -76,8 +81,9 @@ app.use('/proxy/', createProxyMiddleware({
       proxyRes: (proxyRes) => {
           // Clean CORS for maximum compatibility without credentials conflict
           proxyRes.headers['access-control-allow-origin'] = '*';
-          proxyRes.headers['access-control-allow-methods'] = 'GET, OPTIONS, HEAD';
-          proxyRes.headers['access-control-allow-headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Range';
+          proxyRes.headers['access-control-allow-methods'] = 'GET, OPTIONS, HEAD, PUT, PATCH, POST, DELETE';
+          proxyRes.headers['access-control-allow-headers'] = '*';
+          proxyRes.headers['access-control-expose-headers'] = '*';
           
           delete proxyRes.headers['access-control-allow-credentials'];
           delete proxyRes.headers['content-security-policy'];
