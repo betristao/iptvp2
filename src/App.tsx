@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, PlayCircle, Tv, MonitorPlay, WifiOff } from 'lucide-react';
+import { Search, PlayCircle, Tv, MonitorPlay, WifiOff, Star } from 'lucide-react';
 import { Channel, parseM3U } from './utils/m3u';
 import { Player } from './components/Player';
 import './index.css';
@@ -14,6 +14,28 @@ function App() {
   const [selectedGroup, setSelectedGroup] = useState<string>('All');
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('iptv_favorites');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('iptv_favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const toggleFavorite = (e: React.MouseEvent, channelId: string) => {
+    e.stopPropagation();
+    setFavorites(prev => 
+      prev.includes(channelId) 
+        ? prev.filter(id => id !== channelId)
+        : [...prev, channelId]
+    );
+  };
 
   useEffect(() => {
     const fetchPlaylist = async () => {
@@ -49,16 +71,26 @@ function App() {
 
   const groups = useMemo(() => {
     const allGroups = channels.map(c => c.group || 'Outros');
-    return ['All', ...Array.from(new Set(allGroups)).sort()];
+    return ['All', 'Favoritos', ...Array.from(new Set(allGroups)).sort()];
   }, [channels]);
 
   const filteredChannels = useMemo(() => {
     return channels.filter(channel => {
+      const isFavorite = favorites.includes(channel.id || channel.name);
       const matchesSearch = channel.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesGroup = selectedGroup === 'All' || (channel.group || 'Outros') === selectedGroup;
+      
+      let matchesGroup = false;
+      if (selectedGroup === 'All') {
+        matchesGroup = true;
+      } else if (selectedGroup === 'Favoritos') {
+        matchesGroup = isFavorite;
+      } else {
+        matchesGroup = (channel.group || 'Outros') === selectedGroup;
+      }
+
       return matchesSearch && matchesGroup;
     });
-  }, [channels, searchTerm, selectedGroup]);
+  }, [channels, searchTerm, selectedGroup, favorites]);
 
   return (
     <div className="app-container">
@@ -106,7 +138,7 @@ function App() {
             <div className="empty-message">Nenhum canal localizado.</div>
           ) : (
             filteredChannels.map((channel, idx) => (
-              <button
+              <div
                 key={`${channel.id}-${idx}`}
                 className={`channel-card ${activeChannel?.url === channel.url ? 'active' : ''}`}
                 onClick={() => {
@@ -115,6 +147,8 @@ function App() {
                     setSidebarOpen(false);
                   }
                 }}
+                role="button"
+                tabIndex={0}
               >
                 <div className="channel-logo">
                   {channel.logo ? (
@@ -129,8 +163,15 @@ function App() {
                   <h3 className="channel-name">{channel.name}</h3>
                   <span className="channel-group">{channel.group || 'Outros'}</span>
                 </div>
+                <button 
+                  className={`favorite-btn ${favorites.includes(channel.id || channel.name) ? 'is-favorite' : ''}`}
+                  onClick={(e) => toggleFavorite(e, channel.id || channel.name)}
+                  aria-label="Toggle favorite"
+                >
+                  <Star size={18} fill={favorites.includes(channel.id || channel.name) ? "currentColor" : "none"} />
+                </button>
                 <PlayCircle size={20} className="play-icon" />
-              </button>
+              </div>
             ))
           )}
         </div>

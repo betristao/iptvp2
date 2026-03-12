@@ -9,6 +9,13 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 8080;
 
+app.options(/\/proxy\/.*/, (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+    res.sendStatus(204);
+});
+
 app.use('/proxy/', createProxyMiddleware({
     router: (req) => {
        const target = req.originalUrl.replace('/proxy/', '');
@@ -48,6 +55,22 @@ app.use('/proxy/', createProxyMiddleware({
               proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0');
               
               proxyReq.removeHeader('X-Frame-Options');
+
+              // Remove client hint headers that leak the actual browser
+              const headersToRemove = [
+                  'sec-ch-ua',
+                  'sec-ch-ua-mobile',
+                  'sec-ch-ua-platform',
+                  'sec-ch-ua-platform-version',
+                  'sec-ch-ua-model',
+                  'sec-ch-ua-full-version-list',
+                  'x-forwarded-for',
+                  'x-forwarded-host',
+                  'x-forwarded-proto',
+                  'forwarded'
+              ];
+              headersToRemove.forEach(h => proxyReq.removeHeader(h));
+
           } catch(e) {}
       },
       proxyRes: (proxyRes) => {

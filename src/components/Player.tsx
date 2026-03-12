@@ -85,7 +85,7 @@ export const Player: React.FC<PlayerProps> = ({ url, poster }) => {
          console.error('Network Error (Native HLS fallback): Erro a abrir o canal nativamente.');
       });
     } else {
-      video.src = url;
+      video.src = `${window.location.origin}/proxy/${url}`;
     }
 
     return () => {
